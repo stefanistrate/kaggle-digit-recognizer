@@ -16,6 +16,8 @@ flags.DEFINE_integer('num_training_steps', 25001,
                      'Number of steps to train the model.')
 flags.DEFINE_integer('num_examples_per_batch', 50,
                      'Number of examples to use in a training batch.')
+flags.DEFINE_string('tf_writer_suffix', 'cnn',
+                    'Suffix for the TF FileWriter.')
 
 
 def load_data():
@@ -54,7 +56,7 @@ def get_data_batch(data, batch_number, examples_per_batch):
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial, name='W')
+    return tf.Variable(initial, name='w')
 
 
 def bias_variable(shape):
@@ -62,8 +64,8 @@ def bias_variable(shape):
     return tf.Variable(initial, name='b')
 
 
-def conv2d(x, W):
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+def conv2d(x, w):
+    return tf.nn.conv2d(x, w, strides=[1, 1, 1, 1], padding='SAME')
 
 
 def max_pool_2x2(x):
@@ -71,25 +73,31 @@ def max_pool_2x2(x):
                           strides=[1, 2, 2, 1], padding='SAME')
 
 
-def conv_layer(x, W_shape, b_shape, name):
+def conv_layer(x, w_shape, b_shape, name):
     with tf.name_scope(name):
-        W = weight_variable(W_shape)
+        w = weight_variable(w_shape)
         b = bias_variable(b_shape)
-        h_conv = tf.nn.relu(conv2d(x, W) + b)
-        h_pool = max_pool_2x2(h_conv)
-    return h_pool
+        act = tf.nn.relu(conv2d(x, w) + b)
+        tf.summary.histogram('weights', w)
+        tf.summary.histogram('biases', b)
+        tf.summary.histogram('activations', act)
+        return max_pool_2x2(act)
 
 
-def fc_layer(x, W_shape, b_shape, name):
+def fc_layer(x, w_shape, b_shape, name):
     with tf.name_scope(name):
-        W = weight_variable(W_shape)
+        w = weight_variable(w_shape)
         b = bias_variable(b_shape)
-        h = tf.nn.relu(tf.matmul(x, W) + b)
-    return h
+        act = tf.nn.relu(tf.matmul(x, w) + b)
+        tf.summary.histogram('weights', w)
+        tf.summary.histogram('biases', b)
+        tf.summary.histogram('activations', act)
+        return act
 
 
 def construct_network(x, y_, keep_prob):
     x_image = tf.reshape(x, [-1, 28, 28, 1])
+    tf.summary.image('input', x_image)
     conv1 = conv_layer(x_image, [5, 5, 1, 32], [32], 'conv1')
     conv2 = conv_layer(conv1, [5, 5, 32, 64], [64], 'conv2')
     conv2_flat = tf.reshape(conv2, [-1, 7 * 7 * 64])
@@ -100,11 +108,13 @@ def construct_network(x, y_, keep_prob):
     with tf.name_scope('cross_entropy'):
         cross_entropy = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=fc2))
+        tf.summary.scalar('cross_entropy', cross_entropy)
     with tf.name_scope('train'):
         train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
     with tf.name_scope('accuracy'):
         correct_prediction = tf.equal(tf.argmax(fc2, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        tf.summary.scalar('accuracy', accuracy)
 
     return fc2, train_step, accuracy
 
@@ -119,8 +129,10 @@ if __name__ == '__main__':
         y_ = tf.placeholder(tf.float32, shape=[None, 10], name='labels')
         keep_prob = tf.placeholder(tf.float32, name='keep_prob')
         network, train_step, accuracy = construct_network(x, y_, keep_prob)
+        merged_summary = tf.summary.merge_all()
 
-        writer = tf.summary.FileWriter('/tmp/kaggle-digit-recognizer/tf')
+        writer = tf.summary.FileWriter('/tmp/kaggle-digit-recognizer/%s'
+                                       % FLAGS.tf_writer_suffix)
         writer.add_graph(sess.graph)
 
         saver = tf.train.Saver()
@@ -137,6 +149,12 @@ if __name__ == '__main__':
                                                               keep_prob: 1.0})
                     log.info('STEP %d: training accuracy %g'
                              % (i, train_accuracy))
+
+                if i % 10 == 0:
+                    s = sess.run(merged_summary, feed_dict={x: train_x,
+                                                            y_: train_labels,
+                                                            keep_prob: 1.0})
+                    writer.add_summary(s, i)
 
                 sess.run(train_step, feed_dict={x: train_x,
                                                 y_: train_labels,
