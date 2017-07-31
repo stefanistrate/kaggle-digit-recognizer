@@ -69,8 +69,8 @@ def conv2d(x, w):
 
 
 def max_pool_2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                          strides=[1, 2, 2, 1], padding='SAME')
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1],
+                          padding='SAME')
 
 
 def conv_layer(x, w_shape, b_shape, name):
@@ -88,11 +88,10 @@ def fc_layer(x, w_shape, b_shape, name):
     with tf.name_scope(name):
         w = weight_variable(w_shape)
         b = bias_variable(b_shape)
-        act = tf.nn.relu(tf.matmul(x, w) + b)
+        h = tf.matmul(x, w) + b
         tf.summary.histogram('weights', w)
         tf.summary.histogram('biases', b)
-        tf.summary.histogram('activations', act)
-        return act
+        return h
 
 
 def construct_network(x, y_, keep_prob):
@@ -102,7 +101,7 @@ def construct_network(x, y_, keep_prob):
     conv2 = conv_layer(conv1, [5, 5, 32, 64], [64], 'conv2')
     conv2_flat = tf.reshape(conv2, [-1, 7 * 7 * 64])
     fc1 = fc_layer(conv2_flat, [7 * 7 * 64, 1024], [1024], 'fc1')
-    fc1_dropout = tf.nn.dropout(fc1, keep_prob)
+    fc1_dropout = tf.nn.dropout(tf.nn.relu(fc1), keep_prob)
     fc2 = fc_layer(fc1_dropout, [1024, 10], [10], 'fc2')
 
     with tf.name_scope('cross_entropy'):
@@ -123,20 +122,20 @@ if __name__ == '__main__':
     FLAGS(sys.argv)
     data = load_data()
 
+    log.info('Constructing the convolutional neural network.')
+    x = tf.placeholder(tf.float32, shape=[None, 784], name='x')
+    y_ = tf.placeholder(tf.float32, shape=[None, 10], name='labels')
+    keep_prob = tf.placeholder(tf.float32, name='keep_prob')
+    network, train_step, accuracy = construct_network(x, y_, keep_prob)
+    merged_summary = tf.summary.merge_all()
+
     with tf.Session() as sess:
-        log.info('Constructing the convolutional neural network.')
-        x = tf.placeholder(tf.float32, shape=[None, 784], name='x')
-        y_ = tf.placeholder(tf.float32, shape=[None, 10], name='labels')
-        keep_prob = tf.placeholder(tf.float32, name='keep_prob')
-        network, train_step, accuracy = construct_network(x, y_, keep_prob)
-        merged_summary = tf.summary.merge_all()
-
-        writer = tf.summary.FileWriter('/tmp/kaggle-digit-recognizer/%s'
-                                       % FLAGS.tf_writer_suffix)
-        writer.add_graph(sess.graph)
-
         saver = tf.train.Saver()
         if FLAGS.train:
+            writer = tf.summary.FileWriter('/tmp/kaggle-digit-recognizer/%s'
+                                           % FLAGS.tf_writer_suffix)
+            writer.add_graph(sess.graph)
+
             log.info('Training CNN model...')
             sess.run(tf.global_variables_initializer())
 
