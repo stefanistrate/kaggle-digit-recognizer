@@ -12,7 +12,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_boolean(
         'train', False,
         'Whether to train a new model instead of running a saved one.')
-flags.DEFINE_integer('num_training_steps', 25001,
+flags.DEFINE_integer('num_training_steps', 50001,
                      'Number of steps to train the model.')
 flags.DEFINE_integer('num_examples_per_batch', 50,
                      'Number of examples to use in a training batch.')
@@ -28,11 +28,11 @@ def load_data():
         train = pd.read_csv('data/train.csv')
 
         log.info('Shuffling train data.')
-        shuffled_train = train.sample(frac=1).as_matrix()
+        shuffled_train = train.sample(frac=1, random_state=7).as_matrix()
 
-        log.info('Splitting train data into 80% for training and 20% for '
+        log.info('Splitting train data into 90% for training and 10% for '
                  'evaluation.')
-        num_training_examples = int(0.8 * shuffled_train.shape[0])
+        num_training_examples = int(0.9 * shuffled_train.shape[0])
         train_x = shuffled_train[:num_training_examples, 1:].astype('float32')
         train_labels = np.eye(10)[shuffled_train[:num_training_examples, 0]]
         data['train'] = {'x': train_x, 'labels': train_labels}
@@ -96,7 +96,6 @@ def fc_layer(x, w_shape, b_shape, name):
 
 def construct_network(x, y_, keep_prob):
     x_image = tf.reshape(x, [-1, 28, 28, 1])
-    tf.summary.image('input', x_image)
     conv1 = conv_layer(x_image, [5, 5, 1, 32], [32], 'conv1')
     conv2 = conv_layer(conv1, [5, 5, 32, 64], [64], 'conv2')
     conv2_flat = tf.reshape(conv2, [-1, 7 * 7 * 64])
@@ -140,21 +139,15 @@ if __name__ == '__main__':
             sess.run(tf.global_variables_initializer())
 
             for i in range(FLAGS.num_training_steps):
-                train_x, train_labels = get_data_batch(data['train'], i, 50)
-
                 if i % 100 == 0:
-                    train_accuracy = accuracy.eval(feed_dict={x: train_x,
-                                                              y_: train_labels,
-                                                              keep_prob: 1.0})
-                    log.info('STEP %d: training accuracy %g'
-                             % (i, train_accuracy))
-
-                if i % 10 == 0:
-                    s = sess.run(merged_summary, feed_dict={x: train_x,
-                                                            y_: train_labels,
-                                                            keep_prob: 1.0})
+                    log.info('step %d' % i)
+                    s = sess.run(merged_summary,
+                                 feed_dict={x: data['eval']['x'],
+                                            y_: data['eval']['labels'],
+                                            keep_prob: 1.0})
                     writer.add_summary(s, i)
 
+                train_x, train_labels = get_data_batch(data['train'], i, 50)
                 sess.run(train_step, feed_dict={x: train_x,
                                                 y_: train_labels,
                                                 keep_prob: 0.5})
