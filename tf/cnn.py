@@ -30,9 +30,9 @@ def load_data():
         log.info('Shuffling train data.')
         shuffled_train = train.sample(frac=1, random_state=7).as_matrix()
 
-        log.info('Splitting train data into 90% for training and 10% for '
+        log.info('Splitting train data into 95% for training and 5% for '
                  'evaluation.')
-        num_training_examples = int(0.9 * shuffled_train.shape[0])
+        num_training_examples = int(0.95 * shuffled_train.shape[0])
         train_x = shuffled_train[:num_training_examples, 1:].astype('float32')
         train_labels = np.eye(10)[shuffled_train[:num_training_examples, 0]]
         data['train'] = {'x': train_x, 'labels': train_labels}
