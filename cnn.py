@@ -157,11 +157,11 @@ if __name__ == '__main__':
                                                 y_: data['eval']['labels'],
                                                 keep_prob: 1.0}))
 
-            save_path = saver.save(sess, 'tf/models/cnn.ckpt')
+            save_path = saver.save(sess, 'models/cnn.ckpt')
             log.info('CNN model saved to %s.' % save_path)
         else:
             log.info('Restoring CNN model.')
-            saver.restore(sess, 'tf/models/cnn.ckpt')
+            saver.restore(sess, 'models/cnn.ckpt')
             log.info('CNN model restored.')
 
             log.info('Predicting output labels...')
@@ -175,4 +175,4 @@ if __name__ == '__main__':
             output = pd.DataFrame({'Label' : pd.Series(classified)})
             output.index += 1
             output.index.name = 'ImageId'
-            output.to_csv('tf/outputs/cnn.txt')
+            output.to_csv('outputs/cnn.txt')
