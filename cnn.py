@@ -1,37 +1,39 @@
 #!/usr/bin/env python
 
-import gflags as flags
-import glog as log
 import numpy as np
 import pandas as pd
-import sys
 import tensorflow as tf
 
+tf.logging.set_verbosity(tf.logging.INFO)
 
-FLAGS = flags.FLAGS
-flags.DEFINE_boolean(
+FLAGS = tf.app.flags.FLAGS
+
+tf.app.flags.DEFINE_boolean(
         'train', False,
         'Whether to train a new model instead of running a saved one.')
-flags.DEFINE_integer('num_training_steps', 50001,
-                     'Number of steps to train the model.')
-flags.DEFINE_integer('num_examples_per_batch', 50,
-                     'Number of examples to use in a training batch.')
-flags.DEFINE_string('tf_writer_suffix', 'cnn',
-                    'Suffix for the TF FileWriter.')
+tf.app.flags.DEFINE_integer(
+        'num_training_steps', 10001,
+        'Number of steps to train the model.')
+tf.app.flags.DEFINE_integer(
+        'num_examples_per_batch', 50,
+        'Number of examples to use in a training batch.')
+tf.app.flags.DEFINE_string(
+        'tf_writer_suffix', 'cnn',
+        'Suffix for the TF FileWriter.')
 
 
 def load_data():
     data = {}
 
     if FLAGS.train:
-        log.info('Loading train data.')
+        tf.logging.info('Loading train data.')
         train = pd.read_csv('data/train.csv')
 
-        log.info('Shuffling train data.')
+        tf.logging.info('Shuffling train data.')
         shuffled_train = train.sample(frac=1, random_state=7).as_matrix()
 
-        log.info('Splitting train data into 95% for training and 5% for '
-                 'evaluation.')
+        tf.logging.info('Splitting train data into 95% for training and 5% for '
+                        'evaluation.')
         num_training_examples = int(0.95 * shuffled_train.shape[0])
         train_x = shuffled_train[:num_training_examples, 1:].astype('float32')
         train_labels = np.eye(10)[shuffled_train[:num_training_examples, 0]]
@@ -40,7 +42,7 @@ def load_data():
         eval_labels = np.eye(10)[shuffled_train[num_training_examples:, 0]]
         data['eval'] = {'x': eval_x, 'labels': eval_labels}
     else:
-        log.info('Loading test data.')
+        tf.logging.info('Loading test data.')
         test_x = pd.read_csv('data/test.csv').as_matrix().astype('float32')
         data['test'] = {'x': test_x}
 
@@ -117,11 +119,10 @@ def construct_network(x, y_, keep_prob):
     return fc2, train_step, accuracy
 
 
-if __name__ == '__main__':
-    FLAGS(sys.argv)
+def main(argv):
     data = load_data()
 
-    log.info('Constructing the convolutional neural network.')
+    tf.logging.info('Constructing the convolutional neural network.')
     x = tf.placeholder(tf.float32, shape=[None, 784], name='x')
     y_ = tf.placeholder(tf.float32, shape=[None, 10], name='labels')
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
@@ -135,12 +136,12 @@ if __name__ == '__main__':
                                            % FLAGS.tf_writer_suffix)
             writer.add_graph(sess.graph)
 
-            log.info('Training CNN model...')
+            tf.logging.info('Training CNN model...')
             sess.run(tf.global_variables_initializer())
 
             for i in range(FLAGS.num_training_steps):
                 if i % 100 == 0:
-                    log.info('step %d' % i)
+                    tf.logging.info('step %d' % i)
                     s = sess.run(merged_summary,
                                  feed_dict={x: data['eval']['x'],
                                             y_: data['eval']['labels'],
@@ -152,27 +153,32 @@ if __name__ == '__main__':
                                                 y_: train_labels,
                                                 keep_prob: 0.5})
 
-            log.info('Evaluation accuracy: %g'
-                     % accuracy.eval(feed_dict={x: data['eval']['x'],
-                                                y_: data['eval']['labels'],
-                                                keep_prob: 1.0}))
+            tf.logging.info(
+                    'Evaluation accuracy: %g'
+                    % accuracy.eval(feed_dict={x: data['eval']['x'],
+                                               y_: data['eval']['labels'],
+                                               keep_prob: 1.0}))
 
             save_path = saver.save(sess, 'models/cnn.ckpt')
-            log.info('CNN model saved to %s.' % save_path)
+            tf.logging.info('CNN model saved to %s.' % save_path)
         else:
-            log.info('Restoring CNN model.')
+            tf.logging.info('Restoring CNN model.')
             saver.restore(sess, 'models/cnn.ckpt')
-            log.info('CNN model restored.')
+            tf.logging.info('CNN model restored.')
 
-            log.info('Predicting output labels...')
+            tf.logging.info('Predicting output labels...')
             prediction = tf.argmax(network, 1)
             classified = sess.run(prediction,
                                   feed_dict={x: data['test']['x'],
                                              keep_prob: 1.0})
-            log.info('Done.')
+            tf.logging.info('Done.')
 
-            log.info('Saving output predictions.')
+            tf.logging.info('Saving output predictions.')
             output = pd.DataFrame({'Label' : pd.Series(classified)})
             output.index += 1
             output.index.name = 'ImageId'
             output.to_csv('outputs/cnn.txt')
+
+
+if __name__ == '__main__':
+    tf.app.run()
