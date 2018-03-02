@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+import os
 import pandas as pd
 import tensorflow as tf
 
@@ -55,7 +56,10 @@ def main(unused_argv):
                FLAGS.learning_rate)
     )
     model_dir = 'models/%s' % unique_name
-    output_txt = 'outputs/%s.txt' % unique_name
+    outputs_dir = 'outputs'
+    if not os.path.exists(outputs_dir):
+        os.makedirs(outputs_dir)
+    output_txt = '%s/%s.txt' % (outputs_dir, unique_name)
 
     # Create the estimator.
     classifier = tf.estimator.Estimator(model_fn=cnn_model_fn,
