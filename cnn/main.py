@@ -10,11 +10,11 @@ from model import cnn_model_fn
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer(
-        'training_steps', 20000,
+        'training_steps', 5000,
         'Number of training steps.')
 tf.app.flags.DEFINE_integer(
-        'training_batch_size', 100,
-        'Number of training steps.')
+        'batch_size', 100,
+        'Training batch size.')
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -32,7 +32,6 @@ def main(unused_argv):
     # Construct file paths.
     unique_name = (
             ('CNN_GradientDescent'
-             '_TrainingSteps_%d'
              '_BatchSize_%d'
              '_Conv_%dx%d_%d'
              '_Pool_%dx%d_%d'
@@ -41,8 +40,7 @@ def main(unused_argv):
              '_Dense_%d'
              '_DropoutRate_%f'
              '_LearningRate_%f')
-            % (FLAGS.training_steps,
-               FLAGS.training_batch_size,
+            % (FLAGS.batch_size,
                FLAGS.conv1_kernel_size, FLAGS.conv1_kernel_size,
                FLAGS.conv1_filters,
                FLAGS.pool1_pool_size, FLAGS.pool1_pool_size,
@@ -59,7 +57,7 @@ def main(unused_argv):
     outputs_dir = 'outputs'
     if not os.path.exists(outputs_dir):
         os.makedirs(outputs_dir)
-    output_txt = '%s/%s.txt' % (outputs_dir, unique_name)
+    output_txt = '%s/%s.{}.txt' % (outputs_dir, unique_name)
 
     # Create the estimator.
     classifier = tf.estimator.Estimator(model_fn=cnn_model_fn,
@@ -69,7 +67,7 @@ def main(unused_argv):
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={'x': train_data},
             y=train_labels,
-            batch_size=FLAGS.training_batch_size,
+            batch_size=FLAGS.batch_size,
             num_epochs=None,
             shuffle=True)
     classifier.train(input_fn=train_input_fn,
@@ -97,7 +95,7 @@ def main(unused_argv):
     output_df = pd.DataFrame({'Label' : pd.Series(predict_classes)})
     output_df.index += 1
     output_df.index.name = 'ImageId'
-    output_df.to_csv(output_txt)
+    output_df.to_csv(output_txt.format(eval_results['global_step']))
 
 
 if __name__ == '__main__':
