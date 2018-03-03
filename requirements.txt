@@ -2,4 +2,4 @@ jupyter>=1.0,<1.1
 matplotlib>=2.1,<2.2
 numpy>=1.14,<1.15
 pandas>=0.22,<0.23
-tensorflow>=1.5,<1.6
+tensorflow>=1.6,<1.7
