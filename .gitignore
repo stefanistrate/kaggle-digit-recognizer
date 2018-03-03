@@ -127,3 +127,10 @@ Session.vim
 *~
 # Auto-generated tag files
 tags
+
+
+###############################
+### Kaggle Digit Recognizer ###
+###############################
+
+/models
