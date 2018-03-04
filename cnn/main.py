@@ -31,7 +31,8 @@ def main(unused_argv):
 
     # Construct file paths.
     unique_name = (
-            ('CNN_GradientDescent'
+            ('CNN'
+             '_%s'
              '_BatchSize_%d'
              '_Conv_%dx%d_%d'
              '_Pool_%dx%d_%d'
@@ -40,7 +41,8 @@ def main(unused_argv):
              '_Dense_%d'
              '_DropoutRate_%f'
              '_LearningRate_%f')
-            % (FLAGS.batch_size,
+            % (FLAGS.optimizer,
+               FLAGS.batch_size,
                FLAGS.conv1_kernel_size, FLAGS.conv1_kernel_size,
                FLAGS.conv1_filters,
                FLAGS.pool1_pool_size, FLAGS.pool1_pool_size,

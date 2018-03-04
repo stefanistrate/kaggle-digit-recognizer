@@ -33,6 +33,9 @@ tf.app.flags.DEFINE_integer(
 tf.app.flags.DEFINE_float(
         'dropout_rate', 0.4,
         'Dropout rate to apply to the dense layer.')
+tf.app.flags.DEFINE_string(
+        'optimizer', 'GradientDescent',
+        'TF optimizer algorithm to use.')
 tf.app.flags.DEFINE_float(
         'learning_rate', 0.001,
         'Learning rate for the optimizer.')
@@ -91,18 +94,41 @@ def cnn_model_fn(features, labels, mode):
         'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
     }
     if mode == tf.estimator.ModeKeys.PREDICT:
-      return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     # Calculate loss (for both TRAIN and EVAL modes).
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
     # Configure the training op (for TRAIN mode).
     if mode == tf.estimator.ModeKeys.TRAIN:
-      optimizer = tf.train.GradientDescentOptimizer(
-              learning_rate=FLAGS.learning_rate)
-      train_op = optimizer.minimize(loss=loss,
-                                    global_step=tf.train.get_global_step())
-      return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+        if FLAGS.optimizer == 'Adagrad':
+            optimizer = tf.train.AdagradOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'Adam':
+            optimizer = tf.train.AdamOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'Ftrl':
+            optimizer = tf.train.FtrlOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'GradientDescent':
+            optimizer = tf.train.GradientDescentOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'ProximalAdagrad':
+            optimizer = tf.train.ProximalAdagradOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'ProximalGradientDescent':
+            optimizer = tf.train.ProximalGradientDescentOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        elif FLAGS.optimizer == 'RMSProp':
+            optimizer = tf.train.RMSPropOptimizer(
+                    learning_rate=FLAGS.learning_rate)
+        else:
+            optimizer = None
+        train_op = optimizer.minimize(loss=loss,
+                                      global_step=tf.train.get_global_step())
+        return tf.estimator.EstimatorSpec(mode=mode,
+                                          loss=loss,
+                                          train_op=train_op)
 
     # Add evaluation metrics (for EVAL mode).
     eval_metric_ops = {
