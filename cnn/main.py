@@ -23,10 +23,10 @@ def main(unused_argv):
     # Load input data and split it into train & eval.
     df = pd.read_csv('data/train.csv', dtype=np.uint8)
     train_df = df.sample(frac=0.9, random_state=777)
-    train_data = train_df.iloc[:, 1:].values.astype(np.float32)
+    train_data = train_df.iloc[:, 1:].values.astype(np.float32) / 255.
     train_labels = train_df.iloc[:, 0].values.astype(np.int32)
     eval_df = df.drop(train_df.index)
-    eval_data = eval_df.iloc[:, 1:].values.astype(np.float32)
+    eval_data = eval_df.iloc[:, 1:].values.astype(np.float32) / 255.
     eval_labels = eval_df.iloc[:, 0].values.astype(np.int32)
 
     # Construct file paths.
