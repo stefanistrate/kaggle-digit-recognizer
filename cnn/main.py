@@ -85,7 +85,7 @@ def main(unused_argv):
 
     # Predict with the model.
     predict_data = (pd.read_csv('data/test.csv', dtype=np.uint8)
-                    .values.astype(np.float32))
+                    .values.astype(np.float32) / 255.)
     predict_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={'x': predict_data},
             num_epochs=1,
