@@ -106,7 +106,8 @@ def cnn_model_fn(features, labels, mode):
                     learning_rate=FLAGS.learning_rate)
         elif FLAGS.optimizer == 'Adam':
             optimizer = tf.train.AdamOptimizer(
-                    learning_rate=FLAGS.learning_rate)
+                    learning_rate=FLAGS.learning_rate,
+                    epsilon=1)
         elif FLAGS.optimizer == 'Ftrl':
             optimizer = tf.train.FtrlOptimizer(
                     learning_rate=FLAGS.learning_rate)
@@ -121,7 +122,8 @@ def cnn_model_fn(features, labels, mode):
                     learning_rate=FLAGS.learning_rate)
         elif FLAGS.optimizer == 'RMSProp':
             optimizer = tf.train.RMSPropOptimizer(
-                    learning_rate=FLAGS.learning_rate)
+                    learning_rate=FLAGS.learning_rate,
+                    epsilon=1)
         else:
             optimizer = None
         train_op = optimizer.minimize(loss=loss,
