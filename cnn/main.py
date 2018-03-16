@@ -19,8 +19,9 @@ tf.app.flags.DEFINE_integer(
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
-def normalize_data(data):
-    return data / 255.
+def normalize_data(data, mean, std):
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.nan_to_num((data - mean) / std)
 
 
 def main(unused_argv):
@@ -28,11 +29,13 @@ def main(unused_argv):
     df = pd.read_csv('data/train.csv', dtype=np.uint8)
     train_df = df.sample(frac=0.9, random_state=777)
     train_data = train_df.iloc[:, 1:].values.astype(np.float32)
-    train_data = normalize_data(train_data)
+    data_mean = np.mean(train_data, axis=0)
+    data_std = np.std(train_data, axis=0)
+    train_data = normalize_data(train_data, data_mean, data_std)
     train_labels = train_df.iloc[:, 0].values.astype(np.int32)
     eval_df = df.drop(train_df.index)
     eval_data = eval_df.iloc[:, 1:].values.astype(np.float32)
-    eval_data = normalize_data(eval_data)
+    eval_data = normalize_data(eval_data, data_mean, data_std)
     eval_labels = eval_df.iloc[:, 0].values.astype(np.int32)
 
     # Construct file paths.
@@ -92,7 +95,7 @@ def main(unused_argv):
     # Predict with the model.
     predict_data = (pd.read_csv('data/test.csv', dtype=np.uint8)
                     .values.astype(np.float32))
-    predict_data = normalize_data(predict_data)
+    predict_data = normalize_data(predict_data, data_mean, data_std)
     predict_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={'x': predict_data},
             num_epochs=1,

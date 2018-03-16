@@ -37,7 +37,7 @@ tf.app.flags.DEFINE_string(
         'optimizer', 'GradientDescent',
         'TF optimizer algorithm to use.')
 tf.app.flags.DEFINE_float(
-        'learning_rate', 0.001,
+        'learning_rate', 0.1,
         'Learning rate for the optimizer.')
 
 
