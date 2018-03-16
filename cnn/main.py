@@ -20,7 +20,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def normalize_data(data):
-    return (data - 127.5) / 255.
+    return data / 255.
 
 
 def main(unused_argv):
