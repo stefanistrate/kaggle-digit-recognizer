@@ -42,7 +42,7 @@ if __name__ == '__main__':
         print('>>> RUN #%d <<<' % (i + 1))
         for config in configs:
             print('>>> CONFIG: %s <<<' % str(config))
-            subprocess.call(('./cnn/lenet_main.py '
+            subprocess.call(('./cnn/deep_main.py '
                              '--training_steps {} '
                              '--batch_size {} '
                              '--conv1_filters {} '

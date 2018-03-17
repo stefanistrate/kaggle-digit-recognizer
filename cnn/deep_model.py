@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_float(
         'Learning rate for the optimizer.')
 
 
-def lenet_model_fn(features, labels, mode):
+def model_fn(features, labels, mode):
     # Input layer. Reshape pixel features to
     # [batch_size, image_width, image_height, num_color_channels].
     input_layer = tf.reshape(features['x'], [-1, 28, 28, 1])
