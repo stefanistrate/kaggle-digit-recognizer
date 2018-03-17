@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import tensorflow as tf
 
-from model import cnn_model_fn
+from lenet_model import lenet_model_fn
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -40,7 +40,7 @@ def main(unused_argv):
 
     # Construct file paths.
     unique_name = (
-            ('CNN'
+            ('LeNet'
              '_%s'
              '_BatchSize_%d'
              '_Conv_%dx%d_%d'
@@ -71,7 +71,7 @@ def main(unused_argv):
     output_txt = '%s/%s.{}.txt' % (outputs_dir, unique_name)
 
     # Create the estimator.
-    classifier = tf.estimator.Estimator(model_fn=cnn_model_fn,
+    classifier = tf.estimator.Estimator(model_fn=lenet_model_fn,
                                         model_dir=model_dir)
 
     # Train the model.
