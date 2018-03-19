@@ -40,7 +40,7 @@ def model_fn(features, labels, mode):
     # Dense layer.
     flattened = tf.reshape(conv_group2, [-1, 7 * 7 * 64])
     dense = tf.layers.dense(inputs=flattened,
-                            units=1024,
+                            units=256,
                             activation=tf.nn.relu)
     dropout = tf.layers.dropout(inputs=dense,
                                 rate=0.5,
@@ -63,8 +63,14 @@ def model_fn(features, labels, mode):
 
     # Configure the training op (for TRAIN mode).
     if mode == tf.estimator.ModeKeys.TRAIN:
+        learning_rate = tf.train.exponential_decay(
+                FLAGS.learning_rate,
+                tf.train.get_global_step(),
+                1000,
+                0.9,
+                staircase=True)
         optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=FLAGS.learning_rate)
+                learning_rate=learning_rate)
         train_op = optimizer.minimize(loss=loss,
                                       global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode,

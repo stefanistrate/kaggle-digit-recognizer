@@ -10,7 +10,7 @@ from deeper_model import model_fn
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer(
-        'training_steps', 1000,
+        'training_steps', 5000,
         'Number of training steps.')
 tf.app.flags.DEFINE_integer(
         'batch_size', 100,
