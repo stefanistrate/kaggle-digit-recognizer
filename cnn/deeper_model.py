@@ -3,9 +3,6 @@ import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string(
-        'optimizer', 'GradientDescent',
-        'TF optimizer algorithm to use.')
 tf.app.flags.DEFINE_float(
         'learning_rate', 0.1,
         'Learning rate for the optimizer.')
@@ -66,31 +63,8 @@ def model_fn(features, labels, mode):
 
     # Configure the training op (for TRAIN mode).
     if mode == tf.estimator.ModeKeys.TRAIN:
-        if FLAGS.optimizer == 'Adagrad':
-            optimizer = tf.train.AdagradOptimizer(
-                    learning_rate=FLAGS.learning_rate)
-        elif FLAGS.optimizer == 'Adam':
-            optimizer = tf.train.AdamOptimizer(
-                    learning_rate=FLAGS.learning_rate,
-                    epsilon=1)
-        elif FLAGS.optimizer == 'Ftrl':
-            optimizer = tf.train.FtrlOptimizer(
-                    learning_rate=FLAGS.learning_rate)
-        elif FLAGS.optimizer == 'GradientDescent':
-            optimizer = tf.train.GradientDescentOptimizer(
-                    learning_rate=FLAGS.learning_rate)
-        elif FLAGS.optimizer == 'ProximalAdagrad':
-            optimizer = tf.train.ProximalAdagradOptimizer(
-                    learning_rate=FLAGS.learning_rate)
-        elif FLAGS.optimizer == 'ProximalGradientDescent':
-            optimizer = tf.train.ProximalGradientDescentOptimizer(
-                    learning_rate=FLAGS.learning_rate)
-        elif FLAGS.optimizer == 'RMSProp':
-            optimizer = tf.train.RMSPropOptimizer(
-                    learning_rate=FLAGS.learning_rate,
-                    epsilon=1)
-        else:
-            optimizer = None
+        optimizer = tf.train.GradientDescentOptimizer(
+                learning_rate=FLAGS.learning_rate)
         train_op = optimizer.minimize(loss=loss,
                                       global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(mode=mode,

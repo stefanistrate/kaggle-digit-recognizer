@@ -10,7 +10,7 @@ from deeper_model import model_fn
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_integer(
-        'training_steps', 5000,
+        'training_steps', 1000,
         'Number of training steps.')
 tf.app.flags.DEFINE_integer(
         'batch_size', 100,
@@ -41,11 +41,10 @@ def main(unused_argv):
     # Construct file paths.
     unique_name = (
             ('CNN_DEEPER'
-             '_%s'
+             '_GradientDescent'
              '_BatchSize_%d'
              '_LearningRate_%f')
-            % (FLAGS.optimizer,
-               FLAGS.batch_size,
+            % (FLAGS.batch_size,
                FLAGS.learning_rate)
     )
     model_dir = 'models/%s' % unique_name
