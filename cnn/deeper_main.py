@@ -21,7 +21,9 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 def normalize_data(data, mean, std):
     with np.errstate(divide='ignore', invalid='ignore'):
-        return np.nan_to_num((data - mean) / std)
+        data = (data - mean) / std
+        data[~np.isfinite(data)] = 0.0
+        return data
 
 
 def main(unused_argv):

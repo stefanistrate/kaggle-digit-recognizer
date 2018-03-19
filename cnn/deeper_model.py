@@ -38,9 +38,9 @@ def model_fn(features, labels, mode):
     conv_group2 = _build_conv_group(conv_group1, 64, 3, mode)
 
     # Dense layer.
-    flatten = tf.reshape(conv_group2, [-1, 7 * 7 * 64])
-    dense = tf.layers.dense(inputs=flatten,
-                            units=256,
+    flattened = tf.reshape(conv_group2, [-1, 7 * 7 * 64])
+    dense = tf.layers.dense(inputs=flattened,
+                            units=1024,
                             activation=tf.nn.relu)
     dropout = tf.layers.dropout(inputs=dense,
                                 rate=0.5,
