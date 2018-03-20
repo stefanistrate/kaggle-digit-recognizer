@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import imgaug.augmenters as iaa
 import numpy as np
 import os
 import pandas as pd
@@ -19,6 +20,25 @@ tf.app.flags.DEFINE_integer(
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
+def augment_data(data):
+    data = data.reshape(data.shape[0], 28, 28)
+
+    seq = iaa.Sequential([
+            iaa.Sometimes(0.5,
+                          iaa.GaussianBlur(sigma=(0, 0.5))),
+            iaa.ContrastNormalization((0.75, 1.5)),
+            iaa.Multiply((0.9, 1.1)),
+            iaa.Affine(
+                    scale={'x': (0.9, 1.1), 'y': (0.9, 1.1)},
+                    translate_percent={'x': (-0.1, 0.1), 'y': (-0.1, 0.1)},
+                    rotate=(-10, 10),
+                    shear=(-10, 10),
+            ),
+    ], random_order=True)
+
+    return seq.augment_images(data).reshape(data.shape[0], 784)
+
+
 def normalize_data(data, mean, std):
     with np.errstate(divide='ignore', invalid='ignore'):
         data = (data - mean) / std
@@ -27,14 +47,17 @@ def normalize_data(data, mean, std):
 
 
 def main(unused_argv):
-    # Load input data and split it into train & eval.
+    # Load input data, split it into train & eval and augment the train part.
     df = pd.read_csv('data/train.csv', dtype=np.uint8)
     train_df = df.sample(frac=0.9, random_state=777)
-    train_data = train_df.iloc[:, 1:].values.astype(np.float32)
+    train_data = train_df.iloc[:, 1:].values
+    train_data = np.concatenate([augment_data(train_data) for _ in range(5)])
+    train_data = train_data.astype(np.float32)
     data_mean = np.mean(train_data, axis=0)
     data_std = np.std(train_data, axis=0)
     train_data = normalize_data(train_data, data_mean, data_std)
     train_labels = train_df.iloc[:, 0].values.astype(np.int32)
+    train_labels = np.concatenate([train_labels for _ in range(5)])
     eval_df = df.drop(train_df.index)
     eval_data = eval_df.iloc[:, 1:].values.astype(np.float32)
     eval_data = normalize_data(eval_data, data_mean, data_std)
